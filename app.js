@@ -206,8 +206,18 @@ app.post('/backend/statuses/comments', jsonParser, (req, res) =>{
         .catch(error => console.log('*******10th error********', error))
 })
 
-
-
+//delete particualar comment
+app.delete('/backend/comments/:id', (req, res) => {
+    
+    Comment.findOneAndRemove({_id: req.query.id})
+    .then(function(result){
+        res.send('comment deleted')
+    })
+    .catch(function(err){
+            console.log('*******between 10th and 11th error********', err);
+    })
+    
+ })
 
 
 
