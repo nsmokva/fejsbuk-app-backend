@@ -187,7 +187,7 @@ app.post('/backend/statuses/comments', jsonParser, (req, res) =>{
     Status.findOne(filter)
         .then(result => {
             console.log('result of pressing comment: ', result) 
-            result.comments.unshift({
+            result.comments.push({
                 comment: req.body.comment,
                 ownerId: req.body.ownerId,
                 ownerFirstName: req.body.ownerName,
@@ -207,11 +207,21 @@ app.post('/backend/statuses/comments', jsonParser, (req, res) =>{
 })
 
 //delete particualar comment
-app.delete('/backend/comments/:id', (req, res) => {
-    
-    Comment.findOneAndRemove({_id: req.query.id})
+app.post('/backend/comments/delete', jsonParser, (req, res) => {
+    console.log('erase triggers: ', req.body.id)
+   console.log('erase triggers commentId: ', req.body.commentId)
+    Status.findOne({_id: req.body.id})
     .then(function(result){
-        res.send('comment deleted')
+    var indexOfFoundComment = result.comments.findIndex(comment => comment._id == req.body.commentId)
+    console.log('indexOfFoundComment: ', indexOfFoundComment)
+    result.comments.splice(indexOfFoundComment, 1) 
+     result.save().then(() => {
+        var updatedUserComment = Status.findOne({_id: req.body.id})
+        .then(result => {
+           console.log('status after erasing comment: ', result)
+           res.status(200).send(result)
+        })
+     })
     })
     .catch(function(err){
             console.log('*******between 10th and 11th error********', err);
