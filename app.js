@@ -1,8 +1,12 @@
 const express = require('express')
+var multer  = require('multer')
+var storage = multer.memoryStorage()
+var upload = multer({ storage: storage })
 var bodyParser = require('body-parser')
 var urlencodedParser = bodyParser.urlencoded({ extended: false })
 const app = express()
 var jsonParser = bodyParser.json()
+
 
 const port = 4000
 
@@ -40,10 +44,17 @@ const StatusSchema = new Schema({
     comments: [CommentSchema]
 });
 
+const ImageSchema = new Schema ({
+    name: String,
+    image: Buffer
+});
+
 
 const User = mongoose.model('User', UserSchema);
 
 const Status = mongoose.model('Status', StatusSchema)
+
+const Image = mongoose.model('Image', ImageSchema)
 
 
 
@@ -80,6 +91,7 @@ app.get('/backend/login', (req, res) => {
 })
 // 2. get user based on user id
 app.get('/backend/user', (req, res) => {
+    console.log('get user request: ', req.query.id)
     var user = User.findOne({_id: req.query.id})
     .then(function(result){
         //if there is no user with given username in db, status code 404
@@ -249,7 +261,7 @@ app.get('/backend/statuses', (req, res) =>{
 })
 
 //delete particualar status
-app.delete('/backend/statuses/:id', (req, res) => {
+app.delete('/backend/statuses/', (req, res) => {
     
     Status.findOneAndRemove({_id: req.query.id})
     .then(function(result){
@@ -259,6 +271,34 @@ app.delete('/backend/statuses/:id', (req, res) => {
             console.log('*******12th error********', err);
     })
     
+ })
+
+ // save images
+ app.post('/backend/user/images/:imagename', upload.single('upload'), (req, res) => {
+    var newImage = new Image({name: req.params.imagename, image: req.file.buffer});
+    console.log('imagename and buffer: ', req.params.imagename, req.file.buffer)
+    newImage.save()
+    .then(result =>{
+        res.status(200).send(result)
+    })
+    .catch(error =>{
+        console.log('*******13th error********', error)
+    })
+ })
+
+ // get images
+ app.get('/backend/user/images/:imagename', (req, res) => {
+    var image = Image.findOne({name: req.params.imagename})
+    .then(function(img){
+        if (img===null){
+            res.status(404).send('status code 404') 
+        }else{
+            res.status(200).send(img.image)
+        }
+    })
+    .catch(function(err){
+            console.log('*******14th error********', err);
+    })
  })
 
 
